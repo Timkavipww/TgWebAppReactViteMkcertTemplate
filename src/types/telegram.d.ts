@@ -2,6 +2,15 @@ declare global {
     interface Window {
         Telegram?: {
             WebApp?: {
+                setThemeParams(params: {
+                    bg_color?: string;
+                    text_color?: string;
+                    hint_color?: string;
+                    link_color?: string;
+                    button_color?: string;
+                    button_text_color?: string;
+                    secondary_bg_color?: string;
+                }): unknown;
                 offEvent(arg0: string, handleThemeChange: () => void): unknown;
                 onEvent(arg0: string, handleThemeChange: () => void): unknown;
                 ready(): void;

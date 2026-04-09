@@ -3,16 +3,7 @@ import { useThemeColors } from "../hooks/useThemeColors";
 
 export default function DataPage() {
     const {
-        bgColor,
-        textColor,
-        buttonColor,
-        buttonTextColor,
-        linkColor,
-        hintColor,
-        cardColor,
-        borderColor,
-        glowColor,
-        isDark
+        buttonColor, buttonTextColor
     } = useThemeColors();
 
     const navigate = useNavigate();

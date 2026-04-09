@@ -17,6 +17,7 @@ type TelegramTheme = {
     button_text_color?: string;
     link_color?: string;
     hint_color?: string;
+    secondary_bg_color?: string;
 };
 
 type TelegramContextType = {
@@ -28,7 +29,7 @@ type TelegramContextType = {
 const TelegramContext = createContext<TelegramContextType>({
     user: null,
     theme: null,
-    colorScheme: 'dark', // 👈 фикс
+    colorScheme: "dark"
 });
 
 export const TelegramProvider = ({ children }: { children: React.ReactNode }) => {
@@ -42,22 +43,10 @@ export const TelegramProvider = ({ children }: { children: React.ReactNode }) =>
 
         tg.ready();
 
-        // 👇 первичная инициализация
         setUser(tg.initDataUnsafe?.user || null);
         setTheme(tg.themeParams || null);
-        setColorScheme(tg.colorScheme || 'dark');
+        setColorScheme(tg.colorScheme);
 
-        // 👇 реакция на смену темы
-        const handleThemeChange = () => {
-            setTheme(tg.themeParams || null);
-            setColorScheme(tg.colorScheme || 'dark');
-        };
-
-        tg.onEvent?.('themeChanged', handleThemeChange);
-
-        return () => {
-            tg.offEvent?.('themeChanged', handleThemeChange);
-        };
     }, []);
 
     return (
