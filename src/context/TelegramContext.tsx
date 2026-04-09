@@ -1,56 +1,74 @@
-import { createContext, useContext, useEffect, useState } from "react";
-
-type TelegramUser = {
-    id?: number;
-    first_name?: string;
-    last_name?: string;
-    username?: string;
-    is_premium?: boolean;
-    language_code?: string;
-    photo_url?: string;
-};
-
-type TelegramTheme = {
-    bg_color?: string;
-    text_color?: string;
-    button_color?: string;
-    button_text_color?: string;
-    link_color?: string;
-    hint_color?: string;
-    secondary_bg_color?: string;
-};
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
 
 type TelegramContextType = {
     user: TelegramUser | null;
     theme: TelegramTheme | null;
     colorScheme: 'light' | 'dark';
+    tg: TelegramWebApp | null;
+
+    sendData: (data: unknown) => void;
+    isTelegram: boolean;
 };
 
 const TelegramContext = createContext<TelegramContextType>({
     user: null,
     theme: null,
-    colorScheme: "dark"
+    colorScheme: "dark",
+    tg: null,
+    sendData: () => { },
+    isTelegram: false
 });
 
 export const TelegramProvider = ({ children }: { children: React.ReactNode }) => {
+    const [tg, setTg] = useState<TelegramWebApp | null>(null);
     const [user, setUser] = useState<TelegramUser | null>(null);
     const [theme, setTheme] = useState<TelegramTheme | null>(null);
     const [colorScheme, setColorScheme] = useState<'light' | 'dark'>('dark');
 
     useEffect(() => {
-        const tg = window.Telegram?.WebApp;
-        if (!tg) return;
+        const webApp = window.Telegram?.WebApp;
+        if (!webApp) return;
 
-        tg.ready();
+        webApp.ready();
+        webApp.expand();
 
-        setUser(tg.initDataUnsafe?.user || null);
-        setTheme(tg.themeParams || null);
-        setColorScheme(tg.colorScheme);
+        setTg(webApp);
+        setUser(webApp.initDataUnsafe?.user || null);
+        setTheme(webApp.themeParams || null);
+        setColorScheme(webApp.colorScheme);
 
+        const handleThemeChange = () => {
+            setTheme(webApp.themeParams || null);
+            setColorScheme(webApp.colorScheme);
+        };
+
+        webApp.onEvent("themeChanged", handleThemeChange);
+
+        return () => {
+            webApp.offEvent("themeChanged", handleThemeChange);
+        };
     }, []);
 
+    const sendData = (data: unknown) => {
+        if (!tg) return console.warn("Telegram WebApp недоступен");
+
+        tg.sendData(JSON.stringify(data));
+    };
+
+    const value = useMemo(
+        () => ({
+            tg,
+            user,
+            theme,
+            colorScheme,
+            sendData,
+            isTelegram: !!tg
+        }),
+        [tg, user, theme, colorScheme]
+    );
+
     return (
-        <TelegramContext.Provider value={{ user, theme, colorScheme }}>
+        <TelegramContext.Provider value={value}>
             {children}
         </TelegramContext.Provider>
     );
