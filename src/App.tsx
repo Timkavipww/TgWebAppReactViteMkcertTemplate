@@ -8,15 +8,43 @@ export default function App() {
   const navigate = useNavigate();
 
   const [previewTheme, setPreviewTheme] = useState<'light' | 'dark'>(colorScheme);
+  const [openColor, setOpenColor] = useState<string | null>(null);
+  const [tgTheme, setTgTheme] = useState<Record<string, string> | null>(null);
 
   const theme = useThemeColors(previewTheme);
+
+  // Обновляем previewTheme и themeParams
   useEffect(() => {
     setPreviewTheme(colorScheme);
+    setTgTheme(window.Telegram?.WebApp?.themeParams || null);
+
+    const handleThemeChange = () => {
+      setTgTheme(window.Telegram?.WebApp?.themeParams || null);
+      setPreviewTheme(window.Telegram?.WebApp?.colorScheme || 'dark');
+    };
+
+    window.Telegram?.WebApp?.onEvent?.("themeChanged", handleThemeChange);
+    return () => {
+      window.Telegram?.WebApp?.offEvent?.("themeChanged", handleThemeChange);
+    };
   }, [colorScheme]);
 
   const toggleTheme = () => {
-    const next = previewTheme === 'dark' ? 'light' : 'dark';
-    setPreviewTheme(next);
+    setPreviewTheme(prev => (prev === 'dark' ? 'light' : 'dark'));
+  };
+
+  // описание каждого цвета
+  const colorDescriptions: Record<string, string> = {
+    bgColor: "Фоновый цвет всей страницы.",
+    secondaryBg: "Вторичный фон, используется для секций.",
+    cardColor: "Цвет карточек и панелей.",
+    textColor: "Основной цвет текста.",
+    hintColor: "Цвет подсказок, вспомогательного текста.",
+    buttonColor: "Фон кнопок.",
+    buttonTextColor: "Цвет текста на кнопках.",
+    linkColor: "Цвет ссылок.",
+    borderColor: "Цвет рамок и границ.",
+    glowColor: "Цвет теней и свечения.",
   };
 
   return (
@@ -62,21 +90,54 @@ export default function App() {
         </div>
       </div>
 
-      {/* Цветовая палитра */}
+      {/* Цветовая палитра с слайдером */}
       <div
         style={{ backgroundColor: theme.cardColor, borderColor: theme.borderColor }}
-        className="max-w-md w-full p-4 rounded-2xl shadow-2xl border flex flex-wrap gap-2"
+        className="max-w-md w-full p-4 rounded-2xl shadow-2xl border flex flex-col gap-2"
       >
         <h3 className="font-bold mb-2">Цветовая палитра {previewTheme === 'dark' ? 'тёмной' : 'светлой'} темы</h3>
+
         {Object.entries(theme).map(([key, value]) =>
           key !== 'isDark' ? (
-            <div key={key} className="flex items-center gap-2 w-full">
-              <div className="w-10 h-10 rounded border" style={{ backgroundColor: value as string }}></div>
-              <span>{key}: {value}</span>
+            <div key={key} className="flex flex-col w-full">
+              <div
+                className="flex items-center gap-2 cursor-pointer"
+                onClick={() => setOpenColor(openColor === key ? null : key)}
+              >
+                <div className="w-10 h-10 rounded border" style={{ backgroundColor: value as string, borderColor: theme.borderColor }}></div>
+                <span>{key}: {value}</span>
+              </div>
+              {openColor === key && (
+                <div className="p-2 mt-1 text-sm rounded bg-gray-100 dark:bg-gray-800 transition-colors">
+                  {colorDescriptions[key] || "Описание отсутствует."}
+                  <div className="mt-2 w-full h-10 rounded" style={{ backgroundColor: value as string, border: `1px solid ${theme.borderColor}` }}></div>
+                </div>
+              )}
             </div>
           ) : null
         )}
+
+
       </div>
+      {tgTheme && (
+        <div
+          style={{ backgroundColor: theme.cardColor, borderColor: theme.borderColor }}
+          className="max-w-md w-full p-4 rounded-2xl shadow-2xl border mt-4"
+        >
+          <h3 className="font-bold mb-2">JSON темы Telegram</h3>
+          <pre
+            style={{
+              backgroundColor: theme.secondaryBgColor,
+              color: theme.textColor,
+              padding: '10px',
+              borderRadius: '8px',
+              overflowX: 'auto',
+            }}
+          >
+            {JSON.stringify(tgTheme, null, 2)}
+          </pre>
+        </div>
+      )}
     </div>
   );
 }
