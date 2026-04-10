@@ -1,5 +1,6 @@
 # React Telegram Mini App
 
+[link](https://github.com/Timkavipww/TgWebAppReactViteMkcertTemplate)
 Минимальное интерактивное веб-приложение на **React**, **Vite**, **TailwindCSS** с маршрутизацией через **React Router DOM** и полной интеграцией с **Telegram Web Apps**.  
 Этот шаблон идеально подходит для создания безопасных HTTPS мини-приложений для Telegram.
 
